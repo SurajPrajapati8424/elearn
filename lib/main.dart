@@ -1,5 +1,7 @@
 import 'package:elearn/analytics.dart';
+import 'package:elearn/performancestats.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
@@ -21,6 +23,8 @@ void main() async {
         .recordError(error, stack, fatal: true, reason: 'Test #101');
     return true;
   };
+  // Initialize Firebase Performance
+  FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
   runApp(const MyApp());
 }
 
@@ -87,6 +91,14 @@ class _MyHomePageState extends State<MyHomePage> {
               // for C R A S H L Y T I C S
               onPressed: triggerCrash,
               child: const Text('Trigger crash'),
+            ),
+            // P E R F O R M A N C E
+            ElevatedButton(
+              onPressed: () {
+                Performancestats.performanceOperation()
+                    .then((value) => print('This is Performance Test!'));
+              },
+              child: const Text('Perform Operation'),
             ),
           ],
         ),
