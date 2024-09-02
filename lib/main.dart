@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:elearn/analytics.dart';
 import 'package:elearn/message_screen.dart';
 import 'package:elearn/performancestats.dart';
@@ -31,7 +33,7 @@ void main() async {
   FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
 
   // Initialize Push Notification
-  PushCloudMessageService().initFCM();
+  PushCloudMessageService.initFCM();
   // Handle background FCM & Listen to bg notification
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   // Handle background FCM when Clicked on
@@ -42,7 +44,19 @@ void main() async {
           .pushNamed('/screenFCM', arguments: msgFCM);
     }
   });
-
+  // to handle Foreground notification
+  PushCloudMessageService.localNotiInit();
+  // to handle foreground notifications
+  FirebaseMessaging.onMessage.listen((RemoteMessage _message) {
+    String payloadData = jsonEncode(_message.data);
+    print('received on Foreground !');
+    if (_message.notification != null) {
+      PushCloudMessageService.showSimpleNotification(
+          title: _message.notification!.title!,
+          body: _message.notification!.body!,
+          payload: payloadData);
+    }
+  });
   runApp(const MyApp());
 }
 
