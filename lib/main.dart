@@ -1,12 +1,16 @@
 import 'package:elearn/analytics.dart';
+import 'package:elearn/message_screen.dart';
 import 'package:elearn/performancestats.dart';
+import 'package:elearn/push_cloud_message.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
+final globalNavigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -25,7 +29,29 @@ void main() async {
   };
   // Initialize Firebase Performance
   FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
+
+  // Initialize Push Notification
+  PushCloudMessageService().initFCM();
+  // Handle background FCM & Listen to bg notification
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  // Handle background FCM when Clicked on
+  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage msgFCM) {
+    if (msgFCM.notification != null) {
+      print('Some FCM Notification Received!');
+      globalNavigatorKey.currentState!
+          .pushNamed('/screenFCM', arguments: msgFCM);
+    }
+  });
+
   runApp(const MyApp());
+}
+
+// Background message handler
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  if (message.notification != null) {
+    print('Received Cloud Message!');
+    print('Handling a background message: ${message.messageId}');
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -40,8 +66,14 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Analytics'),
+      // home: const MyHomePage(title: 'Analytics'),
       debugShowCheckedModeBanner: true,
+      // initialRoute: '/',
+      routes: {
+        '/': (context) => const MyHomePage(title: 'Analytics'),
+        '/screenFCM': (context) => const MessageScreen(),
+      },
+      navigatorKey: globalNavigatorKey,
     );
   }
 }
@@ -56,7 +88,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  final int _counter = 0;
 
   // void _incrementCounter() {
   //   setState(() {
@@ -99,6 +131,39 @@ class _MyHomePageState extends State<MyHomePage> {
                     .then((value) => print('This is Performance Test!'));
               },
               child: const Text('Perform Operation'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                RemoteMessage msg = const RemoteMessage(
+                  notification: RemoteNotification(
+                      title: 'Test Notification',
+                      body: 'This is a test notification.'),
+                  data: {
+                    'sub': 'DM',
+                    'rsn': 'Extended',
+                  },
+                );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (builder) => MessageScreen(),
+                    settings: RouteSettings(
+                      arguments: msg,
+                    ),
+                  ),
+                );
+              },
+              child: const Text('Message Screen without FCM'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (builder) => const MessageScreen()));
+                // );
+              },
+              child: const Text('Message Screen with FCM'),
             ),
           ],
         ),
