@@ -33,13 +33,12 @@ void main() async {
   FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
 
   // Initialize Push Notification
-  PushCloudMessageService.initFCM();
+  await PushCloudMessageService.initFCM();
   // Handle background FCM & Listen to bg notification
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   // Handle background FCM when Clicked on
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage msgFCM) {
     if (msgFCM.notification != null) {
-      print('Some FCM Notification Received!');
       globalNavigatorKey.currentState!
           .pushNamed('/screenFCM', arguments: msgFCM);
     }
@@ -47,14 +46,29 @@ void main() async {
   // to handle Foreground notification
   PushCloudMessageService.localNotiInit();
   // to handle foreground notifications
-  FirebaseMessaging.onMessage.listen((RemoteMessage _message) {
-    String payloadData = jsonEncode(_message.data);
-    print('received on Foreground !');
-    if (_message.notification != null) {
-      PushCloudMessageService.showSimpleNotification(
-          title: _message.notification!.title!,
-          body: _message.notification!.body!,
-          payload: payloadData);
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    String payloadData = jsonEncode(message.data);
+    String? imageUrl = message.notification?.android?.imageUrl;
+    // String? iconUrl = message.data['imgURL'];
+    if (message.notification != null) {
+      // when only Big image is present
+      if (imageUrl != null && imageUrl.isNotEmpty) {
+        print('With Image -> $imageUrl');
+        PushCloudMessageService.showSimpleNotification(
+          title: message.notification!.title!,
+          body: message.notification!.body!,
+          payload: payloadData,
+          imageUrl: imageUrl,
+        );
+      } else {
+        print('without imag -');
+        // when non img are present
+        PushCloudMessageService.showSimpleNotification(
+          title: message.notification!.title!,
+          body: message.notification!.body!,
+          payload: payloadData,
+        );
+      }
     }
   });
   runApp(const MyApp());
