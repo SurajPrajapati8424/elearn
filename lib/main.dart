@@ -20,15 +20,15 @@ void main() async {
   );
   // Initialize Crashlytics
   // Log non-fatal errors to Crashlytics
-  FlutterError.onError = (FlutterErrorDetails errorDetails) {
-    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
-  };
-  // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics (for Native Platform)
-  PlatformDispatcher.instance.onError = (error, stack) {
-    FirebaseCrashlytics.instance
-        .recordError(error, stack, fatal: true, reason: 'Test #101');
-    return true;
-  };
+  // FlutterError.onError = (FlutterErrorDetails errorDetails) {
+  //   FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+  // };
+  // // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics (for Native Platform)
+  // PlatformDispatcher.instance.onError = (error, stack) {
+  //   FirebaseCrashlytics.instance
+  //       .recordError(error, stack, fatal: true, reason: 'Test #101');
+  //   return true;
+  // };
   // Initialize Firebase Performance
   FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
 
@@ -49,17 +49,31 @@ void main() async {
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     String payloadData = jsonEncode(message.data);
     String? imageUrl = message.notification?.android?.imageUrl;
+    String? iconUrl = message.data['iconURL'];
+    print('IconURL: $iconUrl');
     // String? iconUrl = message.data['imgURL'];
     if (message.notification != null) {
       // when only Big image is present
       if (imageUrl != null && imageUrl.isNotEmpty) {
-        print('With Image -> $imageUrl');
-        PushCloudMessageService.showSimpleNotification(
-          title: message.notification!.title!,
-          body: message.notification!.body!,
-          payload: payloadData,
-          imageUrl: imageUrl,
-        );
+        if (iconUrl != null && iconUrl.isNotEmpty) {
+          print('With Image & Icon-> $imageUrl');
+          PushCloudMessageService.showSimpleNotification(
+            title: message.notification!.title!,
+            body: message.notification!.body!,
+            payload: payloadData,
+            imageUrl: imageUrl,
+            iconUrl: iconUrl,
+          );
+        }
+        if (iconUrl == null) {
+          print('With Image only -> $imageUrl');
+          PushCloudMessageService.showSimpleNotification(
+            title: message.notification!.title!,
+            body: message.notification!.body!,
+            payload: payloadData,
+            imageUrl: imageUrl,
+          );
+        }
       } else {
         print('without imag -');
         // when non img are present

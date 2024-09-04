@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:elearn/main.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -72,15 +73,27 @@ class PushCloudMessageService {
     required String body,
     required String payload,
     String? imageUrl, // make this optional
+    String? iconUrl, // optional Large Icon URL
   }) async {
     // If there's an image URL, try to download it
     String? largeIconPath;
+    String? smallImagePath;
+    // imageUrl -> largeIconPath
     if (imageUrl != null && imageUrl.isNotEmpty) {
       try {
         largeIconPath = await _downloadAndSaveFile(imageUrl, 'bigImage');
       } catch (e, stackTrace) {
         print('Failed to download image: $e\n$stackTrace');
         largeIconPath = null;
+      }
+    }
+    // iconUrl -> bigImagePath
+    if (iconUrl != null && iconUrl.isNotEmpty) {
+      try {
+        smallImagePath = await _downloadAndSaveFile(iconUrl, 'smallIcon');
+      } catch (e, stackTrace) {
+        print('Failed to download big image: $e\n$stackTrace');
+        smallImagePath = null;
       }
     }
 
@@ -90,7 +103,10 @@ class PushCloudMessageService {
     if (largeIconPath != null) {
       bigPictureStyleInformation = BigPictureStyleInformation(
         FilePathAndroidBitmap(largeIconPath),
-        largeIcon: FilePathAndroidBitmap(largeIconPath),
+        // largeIcon: FilePathAndroidBitmap(largeIconPath),
+        largeIcon: smallImagePath != null
+            ? FilePathAndroidBitmap(smallImagePath)
+            : null,
         contentTitle: title,
         summaryText: body,
         htmlFormatContent: true,
@@ -107,7 +123,7 @@ class PushCloudMessageService {
       ticker: 'ticker',
       styleInformation: bigPictureStyleInformation,
       // largeIcon:
-      //     largeIconPath != null ? FilePathAndroidBitmap(largeIconPath) : null,
+      //     smallImagePath != null ? FilePathAndroidBitmap(smallImagePath) : null,
     );
     NotificationDetails notificationDetails =
         NotificationDetails(android: androidNotificationDetails);
@@ -126,19 +142,55 @@ class PushCloudMessageService {
     }
     final Directory directory = await getApplicationDocumentsDirectory();
     final String filePath = '${directory.path}/$fileName';
+    final File file = File(filePath);
+    // Check if the file already exists
+    // if (await file.exists()) {
+    //   print('File already exists at $filePath');
+    //   return filePath;
+    // }
     try {
-      final http.Response response = await http.get(Uri.parse(url));
+      // Set a timeout for the HTTP request to prevent it from hanging indefinitely
+      final http.Response response = await http.get(
+        Uri.parse(url),
+        headers: {"Accept": "image/*"},
+      ).timeout(
+        const Duration(seconds: 10), // Adjust the duration as needed
+        // onTimeout: () {
+        //   throw TimeoutException(
+        //       'The connection has timed out, Please try again!');
+        // },
+      );
       if (response.statusCode == 200) {
-        final File file = File(filePath);
         await file.writeAsBytes(response.bodyBytes);
         print('done saving...');
         return filePath;
       } else {
-        print('Failed to download file: ${response.statusCode}');
+        print('Failed to download file: ${response.statusCode} \n $fileName');
       }
+    } on SocketException catch (e) {
+      print('Network error: $e');
+    } on TimeoutException catch (e) {
+      print('Timeout error: $e');
     } catch (e) {
       print('Error downloading file: $e');
     }
     return null;
   }
 }
+/**
+  {
+  "to": "device_token",
+  "notification": {
+    "android": {
+      "imageUrl": "https://example.com/path/to/your/image.jpg"
+    }
+    "title": "Notification Title",
+    "body": "This is the notification body",
+  },
+  "data": {
+    "iconURL": 'path/file/.png\.jpg'
+    "key": "val"
+  }
+}
+
+ */
