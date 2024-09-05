@@ -41,3 +41,18 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# =================
+# Firebase configuration files
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+# Build directories
+build/
+android/app/build/
+ios/Runner.build/
+# Flutter-specific files
+.flutter-versions
+.packages
+pubspec.lock
+# Firebase auto-generated options file
+lib/firebase_options.dart
