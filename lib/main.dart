@@ -21,15 +21,15 @@ void main() async {
   );
   // Initialize Crashlytics
   // Log non-fatal errors to Crashlytics
-  // FlutterError.onError = (FlutterErrorDetails errorDetails) {
-  //   FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
-  // };
-  // // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics (for Native Platform)
-  // PlatformDispatcher.instance.onError = (error, stack) {
-  //   FirebaseCrashlytics.instance
-  //       .recordError(error, stack, fatal: true, reason: 'Test #101');
-  //   return true;
-  // };
+  FlutterError.onError = (FlutterErrorDetails errorDetails) {
+    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+  };
+  // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics (for Native Platform)
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance
+        .recordError(error, stack, fatal: true, reason: 'Test #101');
+    return true;
+  };
   // Initialize Firebase Performance
   FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
 
