@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:elearn/analytics.dart';
 import 'package:elearn/message_screen.dart';
 import 'package:elearn/performancestats.dart';
+import 'package:elearn/push_cloud_in_app_message.dart';
 import 'package:elearn/push_cloud_message.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -85,6 +86,8 @@ void main() async {
       }
     }
   });
+  // in-app-msg
+  await InAppMessagingService.initInAppMessaging();
   runApp(const MyApp());
 }
 
@@ -206,6 +209,16 @@ class _MyHomePageState extends State<MyHomePage> {
                 // );
               },
               child: const Text('Message Screen with FCM'),
+            ),
+            // IN-APP-MESSAGE
+            ElevatedButton(
+              onPressed: () async {
+                // log it to firebase if needed
+                await AnalyticsService.analytics.logEvent(name: 'exam_passed');
+                // Trigger the In-App Message manually
+                InAppMessagingService.triggerEvent('exam_passed');
+              },
+              child: const Text('In-App Message'),
             ),
           ],
         ),
