@@ -16,6 +16,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 final globalNavigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -25,6 +26,7 @@ void main() async {
     FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
   };
   // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics (for Native Platform)
+  // Handle uncaught asynchronous errors
   PlatformDispatcher.instance.onError = (error, stack) {
     FirebaseCrashlytics.instance
         .recordError(error, stack, fatal: true, reason: 'Test #101');
@@ -48,47 +50,52 @@ void main() async {
   PushCloudMessageService.localNotiInit();
   // to handle foreground notifications
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    String payloadData = jsonEncode(message.data);
-    String? imageUrl = message.notification?.android?.imageUrl;
-    String? iconUrl = message.data['iconURL'];
-    print('IconURL: $iconUrl');
-    // String? iconUrl = message.data['imgURL'];
-    if (message.notification != null) {
-      // when only Big image is present
-      if (imageUrl != null && imageUrl.isNotEmpty) {
-        if (iconUrl != null && iconUrl.isNotEmpty) {
-          print('With Image & Icon-> $imageUrl');
-          PushCloudMessageService.showSimpleNotification(
-            title: message.notification!.title!,
-            body: message.notification!.body!,
-            payload: payloadData,
-            imageUrl: imageUrl,
-            iconUrl: iconUrl,
-          );
-        }
-        if (iconUrl == null) {
-          print('With Image only -> $imageUrl');
-          PushCloudMessageService.showSimpleNotification(
-            title: message.notification!.title!,
-            body: message.notification!.body!,
-            payload: payloadData,
-            imageUrl: imageUrl,
-          );
-        }
-      } else {
-        print('without imag -');
-        // when non img are present
-        PushCloudMessageService.showSimpleNotification(
-          title: message.notification!.title!,
-          body: message.notification!.body!,
-          payload: payloadData,
-        );
-      }
-    }
+    _handleForegroundNotification(message);
   });
   // in-app-msg
   await InAppMessagingService.initInAppMessaging();
   runApp(const MyApp());
+}
+
+// Foreground message handler
+void _handleForegroundNotification(RemoteMessage message) {
+  String payloadData = jsonEncode(message.data);
+  String? imageUrl = message.notification?.android?.imageUrl;
+  String? iconUrl = message.data['iconURL'];
+  print('IconURL: $iconUrl');
+  // String? iconUrl = message.data['imgURL'];
+  if (message.notification != null) {
+    // when only Big image is present
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      if (iconUrl != null && iconUrl.isNotEmpty) {
+        print('With Image & Icon-> $imageUrl');
+        PushCloudMessageService.showSimpleNotification(
+          title: message.notification!.title!,
+          body: message.notification!.body!,
+          payload: payloadData,
+          imageUrl: imageUrl,
+          iconUrl: iconUrl,
+        );
+      }
+      if (iconUrl == null) {
+        print('With Image only -> $imageUrl');
+        PushCloudMessageService.showSimpleNotification(
+          title: message.notification!.title!,
+          body: message.notification!.body!,
+          payload: payloadData,
+          imageUrl: imageUrl,
+        );
+      }
+    } else {
+      print('without imag -');
+      // when non img are present
+      PushCloudMessageService.showSimpleNotification(
+        title: message.notification!.title!,
+        body: message.notification!.body!,
+        payload: payloadData,
+      );
+    }
+  }
 }
 
 // Background message handler
@@ -213,13 +220,22 @@ class _MyHomePageState extends State<MyHomePage> {
             // IN-APP-MESSAGE
             ElevatedButton(
               onPressed: () async {
-                // log it to firebase if needed
-                await AnalyticsService.analytics.logEvent(name: 'exam_passed');
                 // Trigger the In-App Message manually
                 InAppMessagingService.triggerEvent('exam_passed');
+                // log it to firebase if needed
+                await AnalyticsService.analytics.logEvent(name: 'exam_passed');
               },
-              child: const Text('In-App Message'),
+              child: const Text('#01 In-App Message :exam_passed'),
             ),
+            ElevatedButton(
+                onPressed: () async {
+                  // trigger in-app-msg Campaign
+                  InAppMessagingService.triggerEvent('exam_failed');
+                  // log clicked event in firebase
+                  await AnalyticsService.analytics
+                      .logEvent(name: 'exam_failed');
+                },
+                child: const Text('#02 In-App Message :exam_failed')),
           ],
         ),
       ),

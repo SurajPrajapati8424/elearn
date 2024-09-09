@@ -3,7 +3,7 @@ import 'package:firebase_app_installations/firebase_app_installations.dart';
 
 class InAppMessagingService {
   // Initialize F-Msg & F-Install
-  static final FirebaseInAppMessaging _fiamInstance =
+  static final FirebaseInAppMessaging fiamInstance =
       FirebaseInAppMessaging.instance;
   static final FirebaseInstallations fId = FirebaseInstallations.instance;
 
@@ -12,9 +12,17 @@ class InAppMessagingService {
     print('Firebase Installation FID: $fid');
   }
 
-  // trigger Event for in-app-msg
+  // Trigger event and show feedback in Snackbar
   static void triggerEvent(String eventName) {
-    _fiamInstance.triggerEvent(eventName);
+    fiamInstance.triggerEvent(eventName);
+    // Displaying a Snackbar when the event is triggered
+    // final snackBar = SnackBar(
+    //   content: Text('Triggered event: $eventName'),
+    //   duration: Duration(seconds: 2),
+    // );
+    // ScaffoldMessenger.of(context).showSnackBar(snackBar);
+
+    // Call the method to listen for impressions
   }
   // // Temporary disable In-app Message
   // Future disableFirebaseInAppMessaging() async {

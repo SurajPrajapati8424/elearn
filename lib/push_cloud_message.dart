@@ -28,13 +28,16 @@ class PushCloudMessageService {
     final String? token = await _firebaseMessagingInstance.getToken();
     print('Device TOKEN: $token');
 
-    // Handle permission denied
-    if (setting.authorizationStatus == AuthorizationStatus.authorized) {
-      print('User granted permission');
-    } else if (setting.authorizationStatus == AuthorizationStatus.provisional) {
-      print('User granted provisional permission');
-    } else {
-      print('User declined or has not accepted permission');
+    // Handle permission denied + instead if-else used switch-case
+    switch (setting.authorizationStatus) {
+      case AuthorizationStatus.authorized:
+        print('User granted permission');
+        break;
+      case AuthorizationStatus.provisional:
+        print('User granted provisional permission');
+        break;
+      default:
+        print('User declined or has not accepted permission');
     }
   }
 
@@ -104,30 +107,30 @@ class PushCloudMessageService {
       bigPictureStyleInformation = BigPictureStyleInformation(
         FilePathAndroidBitmap(largeIconPath),
         // largeIcon: FilePathAndroidBitmap(largeIconPath),
-        largeIcon: smallImagePath != null
-            ? FilePathAndroidBitmap(smallImagePath)
-            : null,
+        // largeIcon: smallImagePath != null
+        //     ? FilePathAndroidBitmap(smallImagePath)
+        //     : null,
         contentTitle: title,
         summaryText: body,
         htmlFormatContent: true,
         htmlFormatContentTitle: true,
       );
     }
-    AndroidNotificationDetails androidNotificationDetails =
+    final AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
-      'your channel id',
-      'your channel name',
-      channelDescription: 'your channel description',
+      'elearn_01',
+      'elearn',
+      channelDescription: 'app for e-learning',
       importance: Importance.max,
       priority: Priority.high,
       ticker: 'ticker',
       styleInformation: bigPictureStyleInformation,
-      // largeIcon:
-      //     smallImagePath != null ? FilePathAndroidBitmap(smallImagePath) : null,
+      largeIcon:
+          smallImagePath != null ? FilePathAndroidBitmap(smallImagePath) : null,
     );
-    NotificationDetails notificationDetails =
+    final NotificationDetails notificationDetails =
         NotificationDetails(android: androidNotificationDetails);
-    int notificationId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final int notificationId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     await _flutterLocalNotificationsPlugin.show(
         notificationId, title, body, notificationDetails,
         payload: payload);
@@ -136,7 +139,7 @@ class PushCloudMessageService {
   // Download and save the file locally
   static Future<String?> _downloadAndSaveFile(
       String? url, String fileName) async {
-    if (url == null || url.isEmpty) {
+    if (url == null || url.isEmpty || url.trim() == '') {
       print('Invalid URL provided.');
       return null;
     }
