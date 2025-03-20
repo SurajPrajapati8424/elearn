@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
 class PushCloudMessageService {
-  static final FirebaseMessaging _firebaseMessagingInstance =
+  static final FirebaseMessaging firebaseMessagingInstance =
       FirebaseMessaging.instance;
   static final FlutterLocalNotificationsPlugin
       _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -16,7 +16,7 @@ class PushCloudMessageService {
   static Future<void> initFCM() async {
     // Request permission for notifications (iOS only, optional)
     NotificationSettings setting =
-        await _firebaseMessagingInstance.requestPermission(
+        await firebaseMessagingInstance.requestPermission(
             alert: true,
             announcement: false,
             badge: true,
@@ -25,7 +25,7 @@ class PushCloudMessageService {
             provisional: false,
             sound: true);
     // Generating Token
-    final String? token = await _firebaseMessagingInstance.getToken();
+    final String? token = await firebaseMessagingInstance.getToken();
     print('Device TOKEN: $token');
 
     // Handle permission denied + instead if-else used switch-case
