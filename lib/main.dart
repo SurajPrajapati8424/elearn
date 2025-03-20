@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:elearn/analytics.dart';
 import 'package:elearn/message_screen.dart';
 import 'package:elearn/performancestats.dart';
@@ -10,6 +10,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'appcheck.dart';
 import 'firebase_options.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
@@ -39,6 +40,8 @@ void main() async {
   await PushCloudMessageService.initFCM();
   // Handle background FCM & Listen to bg notification
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  //
+  PushCloudMessageService.firebaseMessagingInstance.getInitialMessage();
   // Handle background FCM when Clicked on
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage msgFCM) {
     if (msgFCM.notification != null) {
@@ -54,6 +57,9 @@ void main() async {
   });
   // in-app-msg
   await InAppMessagingService.initInAppMessaging();
+
+  appCheckGetToken();
+
   runApp(const MyApp());
 }
 
